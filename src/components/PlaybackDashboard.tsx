@@ -27,9 +27,26 @@ function QueuePanel({ controller, expanded }: { controller: PlaybackController; 
           <div {...stylex.props(styles.sectionLabel)}>SIGUIENTES EN ESCENA</div>
           <h2 {...stylex.props(styles.queueTitle)}>La cola <span {...stylex.props(styles.queueTotal)}>{controller.queue.length.toString().padStart(2, '0')}</span></h2>
         </div>
-        {controller.queue.length > 0 && (
-          <button type="button" {...stylex.props(styles.clearButton)} onClick={controller.clearQueue}>Vaciar</button>
-        )}
+        <div {...stylex.props(styles.queueHeaderActions)}>
+          <label
+            title={controller.autoAdvanceQueue
+              ? 'Al terminar una pista, inicia la siguiente automáticamente.'
+              : 'Al terminar una pista, la música de fondo sigue hasta que avances manualmente.'}
+            {...stylex.props(styles.autoAdvanceControl)}
+          >
+            <span>Auto siguiente</span>
+            <input
+              type="checkbox"
+              checked={controller.autoAdvanceQueue}
+              onChange={(event) => controller.setAutoAdvanceQueue(event.currentTarget.checked)}
+              aria-label="Reproducir siguiente automáticamente"
+              {...stylex.props(styles.autoAdvanceCheckbox)}
+            />
+          </label>
+          {controller.queue.length > 0 && (
+            <button type="button" {...stylex.props(styles.clearButton)} onClick={controller.clearQueue}>Vaciar</button>
+          )}
+        </div>
       </div>
       {controller.queue.length === 0 ? (
         <div {...stylex.props(styles.emptyQueue)}>
@@ -54,7 +71,7 @@ function QueuePanel({ controller, expanded }: { controller: PlaybackController; 
           )}
         </div>
       )}
-      <button type="button" {...stylex.props(styles.addQueueButton)} onClick={controller.playNext} disabled={controller.queue.length === 0}>
+      <button type="button" {...stylex.props(styles.addQueueButton)} onClick={() => void controller.playNext()} disabled={controller.queue.length === 0}>
         <PlayIcon /> Reproducir siguiente
       </button>
     </article>
@@ -286,7 +303,7 @@ export function PlaybackDashboard({ controller, view, onOpenLibrary }: PlaybackD
               <button type="button" {...stylex.props(styles.playButton)} onClick={hasCurrentTrack ? controller.toggleVideoPlayback : onOpenLibrary} disabled={videoStatus === 'loading'} aria-label={videoStatus === 'playing' ? 'Pausar' : 'Reproducir'}>
                 {videoStatus === 'playing' ? <PauseIcon /> : <PlayIcon />}
               </button>
-              <button type="button" {...stylex.props(styles.transportButton)} onClick={controller.playNext} disabled={!hasCurrentTrack && controller.queue.length === 0} aria-label="Siguiente video">|▶</button>
+              <button type="button" {...stylex.props(styles.transportButton)} onClick={() => void controller.playNext()} disabled={!hasCurrentTrack && controller.queue.length === 0} aria-label="Siguiente video">|▶</button>
               <button type="button" {...stylex.props(styles.transportButton)} onClick={controller.stopVideo} disabled={!hasCurrentTrack} aria-label="Detener">■</button>
             </div>
             <label {...stylex.props(styles.volumeControl)}>
@@ -361,7 +378,10 @@ const styles = stylex.create({
   cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
   queueTitle: { margin: '7px 0 0', fontFamily: 'Manrope, sans-serif', fontSize: '18px', letterSpacing: '-.5px' },
   queueTotal: { marginLeft: '5px', color: colors.textSubtle, fontFamily: 'DM Mono, monospace', fontSize: '11px', fontWeight: 400 },
-  clearButton: { padding: '6px 8px', border: `1px solid ${colors.border}`, borderRadius: '6px', backgroundColor: colors.surfaceRaised, color: colors.textMuted, fontSize: '9px', cursor: 'pointer' },
+  queueHeaderActions: { display: 'flex', alignItems: 'center', gap: '8px' },
+  autoAdvanceControl: { display: 'flex', alignItems: 'center', gap: '6px', color: colors.textMuted, fontSize: '9px', whiteSpace: 'nowrap', cursor: 'pointer' },
+  autoAdvanceCheckbox: { width: '13px', height: '13px', margin: 0, accentColor: colors.accent, cursor: 'pointer' },
+  clearButton: { padding: '6px 8px', border: 0, borderRadius: '6px', backgroundColor: 'transparent', color: colors.textMuted, fontSize: '9px', cursor: 'pointer', ':hover': { backgroundColor: colors.surfaceHover, color: colors.text } },
   emptyQueue: { flex: 1, minHeight: '145px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '7px', textAlign: 'center' },
   emptyQueueIcon: { width: '42px', height: '42px', display: 'grid', placeItems: 'center', marginBottom: '5px', border: `1px solid ${colors.border}`, borderRadius: '12px', color: colors.textSubtle, backgroundColor: colors.surfaceRaised },
   emptyQueueTitle: { color: colors.text, fontSize: '12px', fontWeight: 600 },
@@ -375,7 +395,7 @@ const styles = stylex.create({
   queueActions: { display: 'flex', gap: '2px' },
   queueActionButton: { width: '25px', height: '25px', border: 0, borderRadius: '5px', background: 'transparent', color: colors.textMuted, fontSize: '14px', cursor: 'pointer', ':disabled': { color: colors.textSubtle, opacity: .35, cursor: 'default' }, ':hover': { backgroundColor: colors.surfaceHover } },
   moreQueue: { display: 'block', padding: '9px', color: colors.textSubtle, textAlign: 'center', fontSize: '9px' },
-  addQueueButton: { height: '35px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: `1px dashed #3b3e47`, borderRadius: '7px', backgroundColor: 'transparent', color: colors.textMuted, fontSize: '10px', cursor: 'pointer', ':disabled': { opacity: .45, cursor: 'default' } },
+  addQueueButton: { height: '35px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 0, borderRadius: '8px', backgroundColor: 'transparent', color: colors.accent, fontSize: '10px', cursor: 'pointer', ':hover': { backgroundColor: 'rgba(195, 243, 107, .08)' }, ':disabled': { color: colors.textSubtle, cursor: 'default' } },
   backgroundCard: { padding: '17px 19px 13px', border: `1px solid ${colors.border}`, borderRadius: '13px', backgroundColor: colors.surface },
   backgroundHidden: { display: 'none' },
   backgroundHeader: { display: 'flex', alignItems: 'center', gap: '10px' },
@@ -389,7 +409,7 @@ const styles = stylex.create({
   backgroundTrackText: { minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: '3px' },
   backgroundTrackName: { overflow: 'hidden', color: colors.text, fontSize: '9px', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   backgroundTrackStatus: { color: colors.textSubtle, fontSize: '8px' },
-  smallPlayButton: { width: '29px', height: '29px', display: 'grid', placeItems: 'center', border: `1px solid ${colors.border}`, borderRadius: '50%', backgroundColor: colors.surfaceRaised, color: colors.accent, cursor: 'pointer', ':disabled': { opacity: .4, cursor: 'default' } },
+  smallPlayButton: { width: '29px', height: '29px', display: 'grid', placeItems: 'center', border: 0, borderRadius: '50%', backgroundColor: 'transparent', color: colors.accent, cursor: 'pointer', ':hover': { backgroundColor: 'rgba(195, 243, 107, .1)' }, ':disabled': { opacity: .4, cursor: 'default' } },
   backgroundPlaylist: { maxHeight: '105px', overflowY: 'auto' },
   backgroundItem: { display: 'flex', alignItems: 'center', gap: '8px', minHeight: '29px', color: colors.textSubtle, fontFamily: 'DM Mono, monospace', fontSize: '8px' },
   backgroundItemActive: { color: colors.accent },

@@ -49,6 +49,7 @@ export function usePlaybackController() {
   const currentVideoRef = useRef<LibraryMediaFile | undefined>(undefined);
   const currentYouTubeRef = useRef<YouTubeVideoResult | undefined>(undefined);
   const currentTrackRef = useRef<QueueTrack | undefined>(undefined);
+  const autoAdvanceQueueRef = useRef(true);
   const videoHistoryRef = useRef<QueueTrack[]>([]);
   const [masterVolume, setMasterVolume] = useState(0.85);
   const [fadeOutDuration, setFadeOutDuration] = useState(1200);
@@ -61,6 +62,7 @@ export function usePlaybackController() {
   const [currentVideoSourceId, setCurrentVideoSourceId] = useState<string>();
   const [currentBackground, setCurrentBackground] = useState<LibraryMediaFile>();
   const [historyLength, setHistoryLength] = useState(0);
+  const [autoAdvanceQueue, setAutoAdvanceQueueState] = useState(true);
   const [videoStatus, setVideoStatus] = useState<VideoPlaybackStatus>('idle');
   const [backgroundStatus, setBackgroundStatus] = useState<BackgroundPlaybackStatus>('idle');
   const [currentTime, setCurrentTime] = useState(0);
@@ -96,6 +98,11 @@ export function usePlaybackController() {
   const updateBackgroundPlaylist = useCallback((next: LibraryMediaFile[]) => {
     backgroundPlaylistRef.current = next;
     setBackgroundPlaylist(next);
+  }, []);
+
+  const setAutoAdvanceQueue = useCallback((enabled: boolean) => {
+    autoAdvanceQueueRef.current = enabled;
+    setAutoAdvanceQueueState(enabled);
   }, []);
 
   const releaseVideoUrl = useCallback(() => {
@@ -386,9 +393,9 @@ export function usePlaybackController() {
     }
   }, [startBackgroundMedia, updateBackgroundPlaylist]);
 
-  const playNext = useCallback(async () => {
+  const playNext = useCallback(async (automatic = false) => {
     const [next, ...remaining] = queueRef.current;
-    if (next) {
+    if (next && (!automatic || autoAdvanceQueueRef.current)) {
       updateQueue(remaining);
       if (next.track.kind === 'youtube') await startYouTube(next.track.video);
       else await startVideo(next.track.media, true, true);
@@ -419,14 +426,14 @@ export function usePlaybackController() {
     const source = videoUrl.current;
     if (!source || handledEndedUrl.current === source) return;
     handledEndedUrl.current = source;
-    void playNext();
+    void playNext(true);
   }, [playNext]);
 
   const handleYouTubeEnded = useCallback(() => {
     const source = `${currentYouTubeRef.current?.id}:${videoRequest.current}`;
     if (!currentYouTubeRef.current || handledEndedUrl.current === source) return;
     handledEndedUrl.current = source;
-    void playNext();
+    void playNext(true);
   }, [playNext]);
 
   const handleYouTubeStatus = useCallback((status: 'idle' | 'loading' | 'playing' | 'paused') => {
@@ -671,6 +678,8 @@ export function usePlaybackController() {
     currentVideoFile,
     currentVideoSourceId,
     historyLength,
+    autoAdvanceQueue,
+    setAutoAdvanceQueue,
     currentBackground,
     videoStatus,
     backgroundStatus,

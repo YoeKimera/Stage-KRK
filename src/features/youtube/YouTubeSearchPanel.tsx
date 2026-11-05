@@ -166,7 +166,7 @@ const styles = stylex.create({
   description: { display: '-webkit-box', overflow: 'hidden', margin: 0, color: colors.textSubtle, fontSize: '10px', lineHeight: 1.5, WebkitBoxOrient: 'vertical', WebkitLineClamp: 2 },
   actions: { display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '7px', '@media (max-width: 760px)': { gridColumn: '2', gridRow: '2' }, '@media (max-width: 480px)': { gridColumn: '1', gridRow: 'auto' } },
   openLink: { padding: '8px 10px', borderRadius: '6px', backgroundColor: colors.accent, color: colors.background, textAlign: 'center', textDecoration: 'none', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 700 },
-  queueButton: { padding: '8px 10px', border: `1px solid ${colors.border}`, borderRadius: '6px', backgroundColor: colors.surfaceRaised, color: colors.text, whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 600, cursor: 'pointer' },
+  queueButton: { padding: '8px 10px', border: 0, borderRadius: '6px', backgroundColor: 'transparent', color: colors.textMuted, whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 600, cursor: 'pointer', ':hover': { backgroundColor: colors.surfaceHover, color: colors.text } },
   downloadButton: { padding: '8px 10px', border: `1px solid ${colors.border}`, borderRadius: '6px', backgroundColor: 'transparent', color: colors.textSubtle, whiteSpace: 'nowrap', fontSize: '9px', cursor: 'not-allowed', opacity: .65 },
   disclaimer: { margin: 0, color: colors.textSubtle, fontSize: '10px', lineHeight: 1.6 },
 });

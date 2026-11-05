@@ -13,4 +13,8 @@ export interface DisplaySnapshot {
   currentTime: number;
 }
 
-export type DisplayMessage = DisplaySnapshot | { type: 'ready' } | { type: 'display-error'; message: string };
+export type DisplayMessage =
+  | DisplaySnapshot
+  | { type: 'ready' }
+  | { type: 'background-image'; imageId?: string; file?: File }
+  | { type: 'display-error'; message: string };

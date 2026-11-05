@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode } from 'react';
+import { useCallback, useRef, useState, type ReactNode } from 'react';
 import * as stylex from '@stylexjs/stylex';
 import { colors, space } from './styles/tokens.stylex';
 import { LibraryExplorer } from './features/library/LibraryExplorer';
@@ -62,6 +62,7 @@ function App() {
 function MainApp() {
   const [activeTab, setActiveTab] = useState<'overview' | 'library' | 'queue' | 'youtube'>('overview');
   const [folderStatus, setFolderStatus] = useState('Sin conectar');
+  const backgroundImageInput = useRef<HTMLInputElement>(null);
   const handleFolderStatusChange = useCallback((status: string) => setFolderStatus(status), []);
   const playback = usePlaybackController();
   const secondaryDisplay = useSecondaryDisplay(playback);
@@ -150,6 +151,40 @@ function MainApp() {
               </span>
               <span {...stylex.props(styles.statusDot, folderStatus.includes('activa') || folderStatus.includes('activas') ? styles.statusDotActive : null)} />
             </div>
+            <input
+              ref={backgroundImageInput}
+              type="file"
+              accept="image/*"
+              hidden
+              aria-label="Seleccionar imagen para la segunda pantalla"
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                if (file) secondaryDisplay.chooseBackgroundImage(file);
+                event.currentTarget.value = '';
+              }}
+            />
+            <button
+              type="button"
+              {...stylex.props(styles.secondaryButton)}
+              onClick={() => backgroundImageInput.current?.click()}
+              title={secondaryDisplay.backgroundImageName ?? 'Elegir imagen de fondo para la segunda pantalla'}
+              aria-label={secondaryDisplay.backgroundImageName
+                ? `Cambiar imagen de fondo: ${secondaryDisplay.backgroundImageName}`
+                : 'Elegir imagen de fondo para la segunda pantalla'}
+            >
+              {secondaryDisplay.backgroundImageName ? 'Cambiar fondo' : 'Imagen de fondo'}
+            </button>
+            {secondaryDisplay.backgroundImageName && (
+              <button
+                type="button"
+                {...stylex.props(styles.removeBackgroundImageButton)}
+                onClick={() => secondaryDisplay.chooseBackgroundImage(undefined)}
+                aria-label="Quitar imagen de fondo de la segunda pantalla"
+                title="Quitar imagen de fondo"
+              >
+                ×
+              </button>
+            )}
             <button
               type="button"
               {...stylex.props(styles.secondaryButton, secondaryDisplay.connected && styles.secondaryButtonConnected)}
@@ -164,15 +199,6 @@ function MainApp() {
           </div>
         </section>
 
-        <div {...stylex.props(styles.statusBanner)}>
-          <span {...stylex.props(styles.bannerIcon)}><Icon name="info" size={17} /></span>
-          <p {...stylex.props(styles.bannerText)}>
-            {activeTab === 'youtube'
-              ? <><strong>Reproducción oficial.</strong> YouTube se reproduce incrustado y puede añadirse a la misma cola que tu biblioteca local.</>
-              : <><strong>Mezcla de audio activa.</strong> La cola avanza automáticamente y las transiciones entre karaoke y ambiente son configurables.</>}
-          </p>
-          <span {...stylex.props(styles.bannerStage)}>{activeTab === 'youtube' ? 'ETAPA 06 / 07' : 'ETAPA 05 / 07'}</span>
-        </div>
         {secondaryDisplay.error && <p role="alert" {...stylex.props(styles.displayError)}>{secondaryDisplay.error}</p>}
 
         {activeTab === 'youtube' && <YouTubeSearchPanel onPlayNow={playYouTube} onAddToQueue={playback.addYouTubeToQueue} />}
@@ -216,8 +242,8 @@ const styles = stylex.create({
   brandDivider: { height: '20px', width: '1px', backgroundColor: colors.border, marginInline: '4px' },
   brandCaption: { fontFamily: 'DM Mono, monospace', color: colors.textSubtle, fontSize: '9px', letterSpacing: '1.1px' },
   nav: { display: 'flex', alignItems: 'center', gap: '5px', height: '100%', '@media (max-width: 760px)': { gridColumn: '1 / -1', height: '38px', justifyContent: 'space-between' } },
-  navButton: { height: '38px', paddingInline: '14px', display: 'flex', alignItems: 'center', gap: '9px', border: '1px solid transparent', borderRadius: '8px', backgroundColor: 'transparent', color: colors.textMuted, fontSize: '13px', fontWeight: 600, cursor: 'pointer', '@media (max-width: 760px)': { flex: 1, justifyContent: 'center', paddingInline: '8px', fontSize: '11px' } },
-  navButtonActive: { backgroundColor: colors.surfaceRaised, borderColor: colors.border, color: colors.text },
+  navButton: { height: '38px', paddingInline: '14px', display: 'flex', alignItems: 'center', gap: '9px', border: '1px solid transparent', borderRadius: '8px', backgroundColor: 'transparent', color: colors.textMuted, fontSize: '13px', fontWeight: 600, cursor: 'pointer', ':hover': { backgroundColor: colors.surfaceHover, color: colors.text }, '@media (max-width: 760px)': { flex: 1, justifyContent: 'center', paddingInline: '8px', fontSize: '11px' } },
+  navButtonActive: { backgroundColor: 'rgba(195, 243, 107, .08)', borderColor: 'transparent', color: colors.accent },
   navCount: { minWidth: '20px', height: '20px', display: 'grid', placeItems: 'center', borderRadius: '6px', backgroundColor: colors.surfaceHover, color: colors.textMuted, fontFamily: 'DM Mono, monospace', fontSize: '10px' },
   topbarRight: { minWidth: '250px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '14px', '@media (max-width: 1050px)': { minWidth: '205px', gap: '8px' }, '@media (max-width: 760px)': { minWidth: 0, gap: '8px' } },
   demoPill: { display: 'flex', alignItems: 'center', gap: '7px', padding: '7px 10px', border: `1px solid ${colors.border}`, borderRadius: '20px', color: colors.textMuted, fontFamily: 'DM Mono, monospace', fontSize: '9px', letterSpacing: '.5px' },
@@ -237,13 +263,10 @@ const styles = stylex.create({
   statusIcon: { color: colors.textMuted, display: 'grid', placeItems: 'center' },
   statusDot: { width: '6px', height: '6px', borderRadius: '50%', backgroundColor: colors.textSubtle, marginLeft: '5px' },
   statusDotActive: { backgroundColor: colors.accent },
-  secondaryButton: { height: '39px', display: 'flex', alignItems: 'center', gap: '8px', paddingInline: '12px', border: `1px solid ${colors.border}`, borderRadius: '9px', backgroundColor: colors.surface, color: colors.textMuted, fontSize: '12px', cursor: 'pointer', ':disabled': { opacity: .48, cursor: 'default' } },
-  secondaryButtonConnected: { borderColor: '#485537', color: colors.accent },
+  secondaryButton: { height: '39px', display: 'flex', alignItems: 'center', gap: '8px', paddingInline: '12px', border: 0, borderRadius: '9px', backgroundColor: 'transparent', color: colors.textMuted, fontSize: '12px', cursor: 'pointer', ':hover': { backgroundColor: colors.surfaceHover, color: colors.text }, ':disabled': { opacity: .48, cursor: 'default' } },
+  secondaryButtonConnected: { color: colors.accent },
+  removeBackgroundImageButton: { width: '34px', height: '39px', border: 0, borderRadius: '9px', backgroundColor: 'transparent', color: colors.textMuted, fontSize: '18px', cursor: 'pointer', ':hover': { backgroundColor: 'rgba(255, 119, 119, .1)', color: colors.danger } },
   displayError: { margin: '-8px 0 16px', padding: '9px 12px', border: '1px solid #553538', borderRadius: '7px', backgroundColor: '#2a1e21', color: '#ffaaaa', fontSize: '11px', lineHeight: 1.5 },
-  statusBanner: { minHeight: '46px', display: 'flex', alignItems: 'center', gap: '11px', marginBottom: '20px', padding: '10px 14px', border: '1px solid #34352f', borderRadius: '9px', backgroundColor: '#1d1e1b', color: colors.textMuted, '@media (max-width: 760px)': { alignItems: 'flex-start', padding: '11px' } },
-  bannerIcon: { display: 'grid', placeItems: 'center', color: colors.accent },
-  bannerText: { flex: 1, margin: 0, fontSize: '12px', lineHeight: 1.5, '@media (max-width: 760px)': { fontSize: '10px' } },
-  bannerStage: { marginLeft: 'auto', color: '#b2a884', fontFamily: 'DM Mono, monospace', fontSize: '9px', letterSpacing: '.7px', whiteSpace: 'nowrap' },
   dashboardGrid: { display: 'grid', gridTemplateColumns: 'minmax(0, 1.65fr) minmax(310px, .85fr)', gap: '18px', '@media (max-width: 1000px)': { gridTemplateColumns: 'minmax(0, 1.35fr) minmax(270px, .9fr)', gap: '13px' }, '@media (max-width: 760px)': { gridTemplateColumns: 'minmax(0, 1fr)' } },
   queueOnly: { gridTemplateColumns: 'minmax(0, 1fr)' },
   queueSideColumn: { maxWidth: '600px' },

@@ -43,9 +43,9 @@ La app solo recorre la carpeta seleccionada y sus subcarpetas cuando el usuario 
 
 ## Reproducción y cola
 
-En Biblioteca, **Reproducir** inicia un video al momento y **+ Cola** lo agrega a la lista. La cola permite cambiar el orden, quitar pistas y reproducir la siguiente; al terminar un video, Stage inicia el siguiente automáticamente. Al detener un karaoke, la música de fondo puede reanudarse desde su posición anterior.
+En Biblioteca, **Reproducir** inicia un video al momento y **+ Cola** lo agrega a la lista. La cola permite cambiar el orden, quitar pistas y elegir **Auto siguiente**. Activado, Stage inicia la próxima pista al terminar; desactivado, conserva la cola, reanuda la música de fondo y espera a que pulses **Reproducir siguiente**. Al detener un karaoke, la música de fondo puede reanudarse desde su posición anterior.
 
-Agrega pistas de audio con **+ Ambiente**. La playlist comienza al agregar su primera pista, admite pausa, repetición y volumen independiente. El volumen de karaoke y el volumen maestro también son independientes. Al iniciar un karaoke, el ambiente baja gradualmente y permanece pausado entre canciones de la cola; al terminar o detener el karaoke, el ambiente vuelve gradualmente.
+Agrega pistas de audio con **+ Ambiente**. La playlist comienza al agregar su primera pista, admite pausa, repetición y volumen independiente. El volumen de karaoke y el volumen maestro también son independientes. Al iniciar un karaoke, el ambiente baja gradualmente; vuelve gradualmente al terminar si el avance automático está desactivado o la cola no tiene más pistas.
 
 Los controles **Fade salida** y **Fade entrada** permiten ajustar por separado la duración de cada transición entre 0 y 5 segundos. Los valores iniciales son 1,2 y 1,8 segundos. Los fades usan Web Audio API y el motor de audio se habilita con la primera acción de reproducción. Si el navegador no permite inicializar Web Audio, Stage muestra el error y mantiene la reproducción directa sin fades.
 
@@ -58,12 +58,12 @@ Chrome y Edge aplican políticas de autoplay y compatibilidad de códecs. Stage 
 - Exploración local de audio y video, búsqueda, filtros y navegación por carpetas.
 - Persistencia de handles locales en IndexedDB cuando está soportada.
 - Reproducción local con mezcla Web Audio, volúmenes independientes, master y fades configurables.
-- Playlist de ambiente y cola de karaoke con avance automático y prioridad de audio entre canciones.
+- Playlist de ambiente y cola de karaoke con avance automático opcional y prioridad de audio durante el karaoke.
 - Publicación estática automatizada en GitHub Pages.
 
 ## Segunda pantalla
 
-Pulsa **Segunda pantalla** para abrir una ventana independiente. Permite moverla a otro monitor y activar pantalla completa desde esa ventana. El video, el título, la pausa y la posición se sincronizan desde la consola mediante `BroadcastChannel`; la ventana secundaria permanece silenciada para evitar duplicar el audio.
+Pulsa **Segunda pantalla** para abrir una ventana independiente. Permite moverla a otro monitor y activar pantalla completa desde esa ventana. Opcionalmente, **Imagen de fondo** permite elegir una imagen del equipo para la pantalla de espera; puedes cambiarla o quitarla desde la consola. La imagen se comparte solo entre las dos ventanas durante la sesión y no se sube ni se guarda. El video, el título, la pausa y la posición se sincronizan desde la consola mediante `BroadcastChannel`; la ventana secundaria permanece silenciada para evitar duplicar el audio.
 
 El archivo de video se comparte solo durante la sesión y la segunda ventana crea y libera su propia URL temporal. No se guarda la URL ni el archivo en la persistencia. Permite ventanas emergentes para el sitio. Si el navegador no puede compartir o decodificar el archivo en esa ventana, Stage muestra el error en pantalla.
 

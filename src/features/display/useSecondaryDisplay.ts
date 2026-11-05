@@ -15,6 +15,9 @@ export function useSecondaryDisplay(controller: PlaybackController) {
   const [error, setError] = useState('');
   const channelRef = useRef<BroadcastChannel | null>(null);
   const windowRef = useRef<Window | null>(null);
+  const backgroundImageRef = useRef<File | undefined>(undefined);
+  const backgroundImageIdRef = useRef<string | undefined>(undefined);
+  const [backgroundImage, setBackgroundImage] = useState<File>();
   const lastPublishedFileRef = useRef<File | undefined>(undefined);
   const lastPublishedSourceIdRef = useRef<string | undefined>(undefined);
   const snapshotRef = useRef<DisplaySnapshot>({
@@ -50,10 +53,22 @@ export function useSecondaryDisplay(controller: PlaybackController) {
         setError(postError instanceof Error ? `No se pudo sincronizar la segunda pantalla: ${postError.message}` : 'No se pudo sincronizar la segunda pantalla.');
       }
     };
+    const publishBackgroundImage = () => {
+      try {
+        channel.postMessage({
+          type: 'background-image',
+          imageId: backgroundImageIdRef.current,
+          file: backgroundImageRef.current,
+        } satisfies DisplayMessage);
+      } catch (postError) {
+        setError(postError instanceof Error ? `No se pudo enviar la imagen de fondo: ${postError.message}` : 'No se pudo enviar la imagen de fondo.');
+      }
+    };
     const handleMessage = (event: MessageEvent<DisplayMessage>) => {
       if (event.data?.type === 'ready') {
         setConnected(true);
         setError('');
+        publishBackgroundImage();
         publishSnapshot(true);
       } else if (event.data?.type === 'display-error') {
         setError(event.data.message);
@@ -66,6 +81,19 @@ export function useSecondaryDisplay(controller: PlaybackController) {
       channelRef.current = null;
     };
   }, [sessionId]);
+
+  useEffect(() => {
+    if (!channelRef.current) return;
+    try {
+      channelRef.current.postMessage({
+        type: 'background-image',
+        imageId: backgroundImageIdRef.current,
+        file: backgroundImage,
+      } satisfies DisplayMessage);
+    } catch (postError) {
+      setError(postError instanceof Error ? `No se pudo enviar la imagen de fondo: ${postError.message}` : 'No se pudo enviar la imagen de fondo.');
+    }
+  }, [backgroundImage]);
 
   useEffect(() => {
     const channel = channelRef.current;
@@ -129,8 +157,25 @@ export function useSecondaryDisplay(controller: PlaybackController) {
     setConnected(false);
   }, [sessionId]);
 
+  const chooseBackgroundImage = useCallback((file: File | undefined) => {
+    if (file && !file.type.startsWith('image/')) {
+      setError('El archivo seleccionado no es una imagen compatible.');
+      return;
+    }
+    if (file && file.size > 20 * 1024 * 1024) {
+      setError('La imagen de fondo debe pesar menos de 20 MB.');
+      return;
+    }
+    backgroundImageRef.current = file;
+    backgroundImageIdRef.current = file ? `${file.name}:${file.size}:${file.lastModified}:${crypto.randomUUID()}` : undefined;
+    setBackgroundImage(file);
+    setError('');
+  }, []);
+
   return {
     open,
+    chooseBackgroundImage,
+    backgroundImageName: backgroundImage?.name,
     opened,
     connected,
     error,

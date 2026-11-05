@@ -7,12 +7,15 @@ function isDisplayMessage(value: unknown): value is DisplayMessage {
   return typeof value === 'object' && value !== null && 'type' in value
     && ((value as { type: unknown }).type === 'snapshot'
       || (value as { type: unknown }).type === 'ready'
+      || (value as { type: unknown }).type === 'background-image'
       || (value as { type: unknown }).type === 'display-error');
 }
 
 export function SecondaryDisplay() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const objectUrlRef = useRef<string | undefined>(undefined);
+  const backgroundImageUrlRef = useRef<string | undefined>(undefined);
+  const backgroundImageIdRef = useRef<string | undefined>(undefined);
   const sourceIdRef = useRef<string | undefined>(undefined);
   const latestSnapshot = useRef<DisplaySnapshot | undefined>(undefined);
   const channelRef = useRef<BroadcastChannel | null>(null);
@@ -20,6 +23,7 @@ export function SecondaryDisplay() {
   const [hasVideo, setHasVideo] = useState(false);
   const [hasYouTubeVideo, setHasYouTubeVideo] = useState(false);
   const [youtubeSnapshot, setYouTubeSnapshot] = useState<DisplaySnapshot>();
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>();
   const [channelError, setChannelError] = useState('');
   const sessionId = new URLSearchParams(window.location.search).get('displaySession');
 
@@ -52,7 +56,15 @@ export function SecondaryDisplay() {
 
     const handleMessage = (event: MessageEvent<unknown>) => {
       if (!isDisplayMessage(event.data)) return;
-      if (event.data.type === 'snapshot') {
+      if (event.data.type === 'background-image') {
+        if (event.data.imageId === backgroundImageIdRef.current) return;
+        if (backgroundImageUrlRef.current) URL.revokeObjectURL(backgroundImageUrlRef.current);
+        backgroundImageIdRef.current = event.data.imageId;
+        const url = event.data.file ? URL.createObjectURL(event.data.file) : undefined;
+        backgroundImageUrlRef.current = url;
+        setBackgroundImageUrl(url);
+        setChannelError('');
+      } else if (event.data.type === 'snapshot') {
         latestSnapshot.current = event.data;
         setTitle(event.data.title ?? '');
         const sourceId = event.data.sourceId ?? event.data.mediaId;
@@ -114,6 +126,7 @@ export function SecondaryDisplay() {
       channel.close();
       channelRef.current = null;
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      if (backgroundImageUrlRef.current) URL.revokeObjectURL(backgroundImageUrlRef.current);
     };
   }, [sessionId]);
 
@@ -131,6 +144,15 @@ export function SecondaryDisplay() {
 
   return (
     <main {...stylex.props(styles.screen)}>
+      {backgroundImageUrl && (
+        <img
+          src={backgroundImageUrl}
+          alt=""
+          aria-hidden="true"
+          onError={() => setChannelError('No se pudo mostrar la imagen de fondo seleccionada.')}
+          {...stylex.props(styles.backgroundImage)}
+        />
+      )}
       <video
         ref={videoRef}
         hidden={!hasVideo}
@@ -187,9 +209,10 @@ export function SecondaryDisplay() {
 
 const styles = stylex.create({
   screen: { width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden', backgroundColor: '#08090b', color: '#f5f4f1' },
-  video: { width: '100%', height: '100%', display: 'none', objectFit: 'contain', backgroundColor: '#08090b' },
+  backgroundImage: { position: 'absolute', inset: 0, zIndex: 0, width: '100%', height: '100%', objectFit: 'cover' },
+  video: { position: 'relative', zIndex: 1, width: '100%', height: '100%', display: 'none', objectFit: 'contain', backgroundColor: '#08090b' },
   visibleVideo: { display: 'block' },
-  waiting: { width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '14px', background: 'radial-gradient(ellipse at 50% 50%, #252a33 0%, #17191f 70%)', textAlign: 'center' },
+  waiting: { position: 'relative', zIndex: 1, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '14px', background: 'radial-gradient(ellipse at 50% 50%, rgba(37, 42, 51, .58) 0%, rgba(23, 25, 31, .76) 70%)', textAlign: 'center' },
   brand: { color: '#c3f36b', fontFamily: 'DM Mono, monospace', fontSize: '12px', letterSpacing: '5px' },
   note: { color: '#c3f36b', fontSize: '58px', opacity: .8 },
   waitingHeading: { margin: 0, fontFamily: 'Manrope, sans-serif', fontSize: 'clamp(24px, 5vw, 52px)' },
