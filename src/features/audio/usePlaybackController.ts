@@ -429,6 +429,13 @@ export function usePlaybackController() {
     void playNext(true);
   }, [playNext]);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (currentVideoRef.current && videoElement.current?.ended) handleVideoEnded();
+    }, 500);
+    return () => window.clearInterval(timer);
+  }, [handleVideoEnded]);
+
   const handleYouTubeEnded = useCallback(() => {
     const source = `${currentYouTubeRef.current?.id}:${videoRequest.current}`;
     if (!currentYouTubeRef.current || handledEndedUrl.current === source) return;

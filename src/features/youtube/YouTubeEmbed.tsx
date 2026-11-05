@@ -162,6 +162,7 @@ export function YouTubeEmbed({
       pollTimer = window.setInterval(() => {
         if (!player) return;
         callbacksRef.current.onTime?.(player.getCurrentTime(), player.getDuration());
+        if (player.getPlayerState() === 0) callbacksRef.current.onEnded?.();
       }, 500);
     }).catch((error: unknown) => {
       if (!disposed) callbacksRef.current.onError?.(error instanceof Error ? error.message : 'No se pudo iniciar el reproductor de YouTube.');
