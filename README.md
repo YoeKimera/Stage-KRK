@@ -69,9 +69,9 @@ El archivo de video se comparte solo durante la sesión y la segunda ventana cre
 
 ## Búsqueda de YouTube
 
-La pestaña **YouTube** busca hasta 10 resultados usando `search.list` de YouTube Data API v3. Puedes reproducirlos al instante o agregarlos a la misma cola que los archivos locales. Stage usa el reproductor oficial incrustado de YouTube; no extrae streams ni descarga contenido. Cada búsqueda usa cuota de API, pero la reproducción incrustada no requiere una API key.
+La pestaña **YouTube** busca hasta 10 resultados usando `search.list` de YouTube Data API v3 y pide solo videos que permiten inserción. Puedes reproducirlos al instante o agregarlos a la misma cola que los archivos locales. Stage usa el reproductor oficial incrustado de YouTube; no extrae streams ni descarga contenido. Cada búsqueda usa cuota de API, pero la reproducción incrustada no requiere una API key.
 
-La reproducción incrustada depende de que el propietario permita insertar el video y de las restricciones de YouTube, el navegador y la red. El autoplay puede ser bloqueado; inicia la reproducción con el control del reproductor si ocurre. El volumen se controla desde Stage, pero el audio de YouTube se procesa dentro de su iframe y no se mezcla mediante el grafo Web Audio usado para los archivos locales.
+El filtro de inserción reduce resultados que el propietario bloqueó para reproductores externos, pero no garantiza disponibilidad: YouTube también puede restringir videos por país, edad, cuenta o cambios posteriores. En esos casos, usa **Abrir en YouTube**; Stage no puede omitir restricciones del reproductor. El autoplay puede ser bloqueado; inicia la reproducción con el control del iframe si ocurre. El volumen se controla desde Stage, pero el audio de YouTube se procesa dentro del iframe y no se mezcla mediante el grafo Web Audio usado para los archivos locales.
 
 Para habilitarla:
 

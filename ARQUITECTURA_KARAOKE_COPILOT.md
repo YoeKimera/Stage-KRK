@@ -530,7 +530,11 @@ acceso o restricciones técnicas.
 
 ### 9.2 Reproducción oficial incrustada
 
-La reproducción de un resultado de YouTube se realizará mediante el
+La búsqueda solicitará únicamente resultados con inserción habilitada
+mediante `videoEmbeddable=embeddable`. Esto reduce resultados que no
+funcionarán en un iframe, pero no garantiza disponibilidad frente a
+restricciones de edad, país, cuenta o cambios posteriores. La
+reproducción de un resultado de YouTube se realizará mediante el
 reproductor oficial IFrame Player API. Las pistas de YouTube pueden
 reproducirse inmediatamente o agregarse a la cola junto con archivos
 locales, pero deben conservar un tipo de medio distinto: el audio del

@@ -32,6 +32,7 @@ export function createYouTubeSearchProvider(apiKey: string): YouTubeSearchProvid
       const url = new URL(SEARCH_ENDPOINT);
       url.searchParams.set('part', 'snippet');
       url.searchParams.set('type', 'video');
+      url.searchParams.set('videoEmbeddable', 'true');
       url.searchParams.set('maxResults', String(MAX_RESULTS));
       url.searchParams.set('q', normalizedQuery);
       url.searchParams.set('key', key);
